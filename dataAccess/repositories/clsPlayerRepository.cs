@@ -43,6 +43,11 @@ public sealed class clsPlayerRepository<TI, TC> : clsDataAccess<clsPlayerEntityM
     {
         throw new NotImplementedException();
     }
+    public async Task<clsPlayerEntityModel<TI, TC>> getPlayerById(TI playerId)
+    {
+
+        return await getEntity(playerId).ConfigureAwait(false);
+    }
 
     public Task updatePlayer(clsPlayer<TI> updatedPlayer)
     {
