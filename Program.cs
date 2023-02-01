@@ -52,11 +52,16 @@ try
     Console.WriteLine(playerId);
     var player = await bs.getPlayer(playerId);
     if (player != null) return Results.Ok(player);
-    
+
     return Results.NotFound(new errorMessage($"Player with id {playerId} not found"));
-    
-    
   });
+
+  app.MapPut("player",
+ [AllowAnonymous] async (IPlayerBusiness<int> bs, clsPlayer<int> newPlayer) =>
+ {
+   Console.WriteLine("lol");
+   return Results.Ok(await bs.updatePlayer(newPlayer));
+ });
   app.Run();
 }
 catch (Exception ex)
