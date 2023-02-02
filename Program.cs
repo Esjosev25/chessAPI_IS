@@ -42,9 +42,16 @@ try
   {
     return "hola mundo";
   });
-
+  // * Player
   app.MapPost("player",
-  [AllowAnonymous] async (IPlayerBusiness<int> bs, clsNewPlayer newPlayer) => Results.Ok(await bs.addPlayer(newPlayer)));
+  [AllowAnonymous] async (IPlayerBusiness<int> bs, clsNewPlayer newPlayer) =>
+  {
+    var player = await bs.addPlayer(newPlayer);
+    if (player != null)
+      return Results.Ok(player);
+    return Results.BadRequest(new errorMessage($"Email {newPlayer.email} already exists "));
+  }
+    );
 
   app.MapGet("player",
   [AllowAnonymous] async (IPlayerBusiness<int> bs, int playerId) =>
@@ -66,6 +73,13 @@ try
 
    return Results.NotFound(new errorMessage($"Player with id {updatePlayer.id} not found"));
  });
+  // * Team
+  app.MapPost("team",
+   [AllowAnonymous] async (IPlayerBusiness<int> bs, clsNewPlayer newPlayer) => Results.Ok(await bs.addPlayer(newPlayer)));
+
+  // * Game
+  app.MapPost("game",
+   [AllowAnonymous] async (IPlayerBusiness<int> bs, clsNewPlayer newPlayer) => Results.Ok(await bs.addPlayer(newPlayer)));
   app.Run();
 }
 catch (Exception ex)

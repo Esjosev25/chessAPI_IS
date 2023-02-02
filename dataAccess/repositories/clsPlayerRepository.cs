@@ -48,17 +48,30 @@ public sealed class clsPlayerRepository<TI, TC> : clsDataAccess<clsPlayerEntityM
 
     return await getEntity(playerId).ConfigureAwait(false);
   }
+  public async Task<clsPlayerEntityModel<TI, TC>?> getPlayerByEmail(clsNewPlayer player)
+  {
+    var p = new DynamicParameters();
+    p.Add("EMAIL", player.email);
 
-  public async Task<clsPlayerEntityModel<TI, TC>> updatePlayer(clsPlayer<TI> updatedPlayer)
+    var query = @"
+    SELECT id, email 
+    FROM public.player
+    WHERE email=@EMAIL";
+
+    var players = await get<clsPlayerEntityModel<TI, TC>>(p,
+                                                         query
+                                                         ).ConfigureAwait(false);
+    return players?.FirstOrDefault();
+    
+  }
+  public async Task<clsPlayer<TI>> updatePlayer(clsPlayer<TI> updatedPlayer)
   {
     var p = new DynamicParameters();
     p.Add("EMAIL", updatedPlayer.email);
     p.Add("ID", updatedPlayer.id);
-    var x = await set<clsPlayerEntityModel<TI, TC>>(p,
-                                                   null,
-                                                   queries.UpdateWholeEntity,
-                                                   null).ConfigureAwait(false);
-    return x;
+    await set(p,
+              null).ConfigureAwait(false);
+    return updatedPlayer;
   }
 
   protected override DynamicParameters fieldsAsParams(clsPlayerEntityModel<TI, TC> entity)
