@@ -54,7 +54,7 @@ public sealed class clsPlayerRepository<TI, TC> : clsDataAccess<clsPlayerEntityM
     var p = new DynamicParameters();
     p.Add("EMAIL", updatedPlayer.email);
     p.Add("ID", updatedPlayer.id);
-    var x= await set<clsPlayerEntityModel<TI, TC>>(p,
+    var x = await set<clsPlayerEntityModel<TI, TC>>(p,
                                                    null,
                                                    queries.UpdateWholeEntity,
                                                    null).ConfigureAwait(false);
@@ -76,4 +76,6 @@ public sealed class clsPlayerRepository<TI, TC> : clsDataAccess<clsPlayerEntityM
     p.Add("ID", key);
     return p;
   }
+
+
 }

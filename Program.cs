@@ -57,10 +57,14 @@ try
   });
 
   app.MapPut("player",
- [AllowAnonymous] async (IPlayerBusiness<int> bs, clsPlayer<int> newPlayer) =>
+ [AllowAnonymous] async (IPlayerBusiness<int> bs, clsPlayer<int> updatePlayer) =>
  {
    Console.WriteLine("lol");
-   return Results.Ok(await bs.updatePlayer(newPlayer));
+   var player = await bs.updatePlayer(updatePlayer);
+   if (player != null)
+     return Results.Ok(player);
+
+   return Results.NotFound(new errorMessage($"Player with id {updatePlayer.id} not found"));
  });
   app.Run();
 }
