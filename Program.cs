@@ -80,7 +80,13 @@ try
 
   // * Game
   app.MapPost("game",
-   [AllowAnonymous] async (IPlayerBusiness<int> bs, clsNewPlayer newPlayer) => Results.Ok(await bs.addPlayer(newPlayer)));
+   [AllowAnonymous] async (IGameBusiness<int> bs, clsNewGame newGame) => {
+     var game = await bs.addGame(newGame);
+     if (game != null)
+       return Results.Ok(game);
+     return Results.BadRequest(new errorMessage($"Game already exists "));
+    
+    });
 
   app.MapGet("game",
   [AllowAnonymous] async (IGameBusiness<int> bs, int id) =>

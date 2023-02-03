@@ -15,7 +15,7 @@ public sealed class clsGameBusiness<TI, TC> : IGameBusiness<TI>
     this.gameRepository = gameRepository;
   }
 
-  public Task<clsGame<TI>> addGame(clsNewGame newGame)
+  public async Task<clsGame<TI>> addGame(clsNewGame newGame)
   {
     // var player = await gameRepository.getPlayerByEmail(newGame);
     // if (player != null)
@@ -23,9 +23,9 @@ public sealed class clsGameBusiness<TI, TC> : IGameBusiness<TI>
     //   return null;
 
 
-    // var x = await gameRepository.addPlayer(newGame).ConfigureAwait(false);
-    // return new clsGame<TI>(x, newPlayer.email);
-    throw new NotImplementedException();
+    var x = await gameRepository.addGame(newGame).ConfigureAwait(false);
+    
+    return new clsGame<TI>(x, newGame);
   }
 
  
@@ -35,7 +35,8 @@ public sealed class clsGameBusiness<TI, TC> : IGameBusiness<TI>
     var x = await gameRepository.getGameById(id).ConfigureAwait(false);
     if (x == null) return null;
     Console.WriteLine(x);
-    return new clsGame<TI>(id, x.whites,x.blacks);
+    
+    return new clsGame<TI>(id, x.whites,x.blacks, x.started, x.turn);
   }
 
 

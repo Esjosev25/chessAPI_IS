@@ -9,7 +9,9 @@ public sealed class qGame : IQGame
     SELECT id, started, whites, blacks, turn, winner
     FROM public.game
     WHERE id=@ID";
-    private const string _add = @"";
+    private const string _add = @"
+    INSERT INTO public.game(started,whites, blacks, turn)
+	VALUES (@STARTED, @WHITES, @BLACKS, @TURN) RETURNING id";
     private const string _delete = @"";
     private const string _update = @"";
 

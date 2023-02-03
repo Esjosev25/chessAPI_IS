@@ -22,7 +22,6 @@ public sealed class clsPlayerBusiness<TI, TC> : IPlayerBusiness<TI>
 
       return null;
 
-
     var x = await playerRepository.addPlayer(newPlayer).ConfigureAwait(false);
     return new clsPlayer<TI>(x, newPlayer.email);
   }
@@ -31,6 +30,7 @@ public sealed class clsPlayerBusiness<TI, TC> : IPlayerBusiness<TI>
   {
     var x = await playerRepository.getPlayerById(playerId).ConfigureAwait(false);
     if (x == null) return null;
+    
     return new clsPlayer<TI>(playerId, x.email);
   }
 

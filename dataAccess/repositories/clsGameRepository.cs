@@ -16,9 +16,14 @@ public sealed class clsGameRepository<TI, TC> : clsDataAccess<clsGameEntityModel
   {
   }
 
-  public Task<TI> addGame(clsNewGame game)
+  public async Task<TI> addGame(clsNewGame game)
   {
-    throw new NotImplementedException();
+    var p = new DynamicParameters();
+    p.Add("BLACKS", game.blacks);
+    p.Add("WHITES", game.whites);
+    p.Add("STARTED", game.started);
+    p.Add("TURN", game.turn);
+    return await add<TI>(p).ConfigureAwait(false);
   }
 
   public Task deleteGame(TI id)
@@ -28,7 +33,6 @@ public sealed class clsGameRepository<TI, TC> : clsDataAccess<clsGameEntityModel
 
   public async Task<clsGameEntityModel<TI, TC>> getGameById(TI id)
   {
-
     return await getEntity(id).ConfigureAwait(false);
   }
 

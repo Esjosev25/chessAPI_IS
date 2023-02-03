@@ -4,10 +4,12 @@ public sealed class clsNewGame
 {
   public clsNewGame()
   {
-
   }
 
   public int whites { get; set; }
   public int blacks { get; set; }
+  public DateTime started { get; set; } =
+  DateTime.Now;
+  public bool turn { get; set; } = true;
 
 }
