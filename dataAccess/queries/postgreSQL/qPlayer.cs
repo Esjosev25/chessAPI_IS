@@ -24,6 +24,10 @@ public sealed class qPlayer : IQPlayer
 	SET email=@EMAIL
 	WHERE id=@ID";
 
+    private const string _findEmail = @"
+    SELECT id, email 
+    FROM public.player
+    WHERE email=@EMAIL";
     public string SQLGetAll => _selectAll;
 
     public string SQLDataEntity => _selectOne;
@@ -33,4 +37,5 @@ public sealed class qPlayer : IQPlayer
     public string DeleteDataEntity => _delete;
 
     public string UpdateWholeEntity => _update;
+    public string SQLGetByEmail => _findEmail;
 }

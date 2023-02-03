@@ -3,6 +3,7 @@ using Autofac.Extensions.DependencyInjection;
 using chessAPI;
 using chessAPI.business.interfaces;
 using chessAPI.models.player;
+using chessAPI.models.game;
 using Microsoft.AspNetCore.Authorization;
 using Serilog;
 using Serilog.Events;
@@ -80,6 +81,16 @@ try
   // * Game
   app.MapPost("game",
    [AllowAnonymous] async (IPlayerBusiness<int> bs, clsNewPlayer newPlayer) => Results.Ok(await bs.addPlayer(newPlayer)));
+
+  app.MapGet("game",
+  [AllowAnonymous] async (IGameBusiness<int> bs, int id) =>
+  {
+    Console.WriteLine(id);
+    var game = await bs.getGame(id);
+    if (game != null) return Results.Ok(game);
+
+    return Results.NotFound(new errorMessage($"Game with id {id} not found"));
+  });
   app.Run();
 }
 catch (Exception ex)
