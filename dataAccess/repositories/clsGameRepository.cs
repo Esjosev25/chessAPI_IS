@@ -19,7 +19,6 @@ public sealed class clsGameRepository<TI, TC> : clsDataAccess<clsGameEntityModel
   public async Task<TI> addGame(clsNewGame game)
   {
     var p = new DynamicParameters();
-    p.Add("BLACKS", game.blacks);
     p.Add("WHITES", game.whites);
     p.Add("STARTED", game.started);
     p.Add("TURN", game.turn);
@@ -36,9 +35,17 @@ public sealed class clsGameRepository<TI, TC> : clsDataAccess<clsGameEntityModel
     return await getEntity(id).ConfigureAwait(false);
   }
 
-  public Task<clsGame<TI>> updateGame(clsGame<TI> updatedGame)
+  public async Task<clsGameEntityModel<TI,TC>> updateGame(clsPutGame<TI> updatedGame, bool turn)
   {
-    throw new NotImplementedException();
+    var p = new DynamicParameters();
+    p.Add("BLACKS", updatedGame.blacks);
+    p.Add("WHITES", updatedGame.whites);
+    p.Add("ID", updatedGame.id);
+    p.Add("TURN", updatedGame.turn ?? turn);
+    p.Add("WINNER", updatedGame.winner);
+    return await set<clsGameEntityModel<TI, TC>>(p,
+               null, queries.UpdateWholeEntity, null).ConfigureAwait(false);
+    
   }
   protected override DynamicParameters fieldsAsParams(clsGameEntityModel<TI, TC> entity)
   {

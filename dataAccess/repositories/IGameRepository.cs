@@ -10,6 +10,6 @@ public interface IGameRepository<TI, TC>
   Task<TI> addGame(clsNewGame game);
 
   Task<clsGameEntityModel<TI, TC>> getGameById(TI id);
-  Task<clsGame<TI>> updateGame(clsGame<TI> updatedGame);
+  Task<clsGameEntityModel<TI, TC>> updateGame(clsPutGame<TI> updatedGame, bool turn);
   Task deleteGame(TI id);
 }

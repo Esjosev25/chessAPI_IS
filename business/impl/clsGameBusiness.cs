@@ -24,33 +24,40 @@ public sealed class clsGameBusiness<TI, TC> : IGameBusiness<TI>
 
 
     var x = await gameRepository.addGame(newGame).ConfigureAwait(false);
-    
+
     return new clsGame<TI>(x, newGame);
   }
 
- 
+
 
   public async Task<clsGame<TI>?> getGame(TI id)
   {
     var x = await gameRepository.getGameById(id).ConfigureAwait(false);
     if (x == null) return null;
     Console.WriteLine(x);
-    
-    return new clsGame<TI>(id, x.whites,x.blacks, x.started, x.turn);
+
+    return new clsGame<TI>(id, x.whites, x.blacks, x.started, x.turn);
   }
 
 
-  public Task<clsGame<TI>?> updateGame(clsGame<TI> updateGame)
+  public async Task<clsGame<TI>?> updateGame(clsPutGame<TI> updateGame)
   {
-    // var player = await gameRepository.getPlayerById(updatePlayer.id).ConfigureAwait(false);
+    var game = await gameRepository.getGameById(updateGame.id).ConfigureAwait(false);
 
-    // if (player != null)
-    //   return await gameRepository.updatePlayer(updateGame).ConfigureAwait(false);
+    if (game != null)
+    {
 
-    // return null;
-    throw new NotImplementedException();
+      var gameModel = await gameRepository.updateGame(updateGame, game.turn).ConfigureAwait(false);
+      if(gameModel != null)
+      return gameModel.getClsGame();
+
+      return null;
+    }
+
+    return null;
+
 
   }
 
- 
+
 }

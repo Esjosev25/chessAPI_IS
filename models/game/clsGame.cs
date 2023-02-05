@@ -17,9 +17,17 @@ public sealed class clsGame<TI>
   public clsGame(TI _id, clsNewGame newGame){
     this.id = _id;
     this.whites = newGame.whites;
-    this.blacks = newGame.blacks;
     this.started = newGame.started;
     this.turn = newGame.turn;
+  }
+  public clsGame(TI _id, clsPutGame<TI> updatedGame){
+    this.id = _id;
+    this.whites = updatedGame.whites;
+    this.turn = (bool) updatedGame.turn;
+    this.winner = (int) updatedGame.winner;
+  }
+  public clsGame(){
+    
   }
   public TI id { get; set; }
   public DateTime started { get; set; }

@@ -80,13 +80,25 @@ try
 
   // * Game
   app.MapPost("game",
-   [AllowAnonymous] async (IGameBusiness<int> bs, clsNewGame newGame) => {
-     var game = await bs.addGame(newGame);
-     if (game != null)
+   [AllowAnonymous] async (IGameBusiness<int> bs, clsNewGame newGame) =>
+   {
+     try
+     {
+       var game = await bs.addGame(newGame);
        return Results.Ok(game);
-     return Results.BadRequest(new errorMessage($"Game already exists "));
-    
-    });
+     }
+     catch (Exception ex)
+     {
+       var code = ex.Message.Split(":")[0];
+       if (code.Equals("23503"))
+         return Results.NotFound(new errorMessage($"Game with id {newGame.whites} doesn't exist"));
+
+       throw ex;
+
+     }
+
+
+   });
 
   app.MapGet("game",
   [AllowAnonymous] async (IGameBusiness<int> bs, int id) =>
@@ -97,6 +109,30 @@ try
 
     return Results.NotFound(new errorMessage($"Game with id {id} not found"));
   });
+
+  app.MapPut("game",
+ [AllowAnonymous] async (IGameBusiness<int> bs, clsPutGame<int> updateGame) =>
+ {
+  try
+  {
+     Console.WriteLine("lol");
+     var player = await bs.updateGame(updateGame);
+     if (player != null)
+       return Results.Ok(player);
+     return Results.BadRequest(new errorMessage($"One or more players belongs to both teams"));
+  }
+  catch (Exception ex)
+  {
+     var code = ex.Message.Split(":")[0];
+     if (code.Equals("23503"))
+       return Results.NotFound(new errorMessage($"Team with id {updateGame.blacks} or {updateGame.whites} doesn't exist"));
+
+     throw ex;
+  }
+   
+ });
+
+
   app.Run();
 }
 catch (Exception ex)
