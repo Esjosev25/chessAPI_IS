@@ -11,7 +11,7 @@ public sealed class qGame : IQGame
     WHERE id=@ID";
   private const string _add = @"
     INSERT INTO public.game(started, whites, turn)
-    VALUES(@STARTED, @WHITES, @TURN)
+    VALUES(@STARTED, @WHITES, @TURN) RETURNING id
    ";
 
   private const string _delete = @"";
