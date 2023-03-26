@@ -1,38 +1,44 @@
-using chessAPI.dataAccess.common;
-using chessAPI.models.game;
 namespace chessAPI.dataAccess.models;
 
-public sealed class clsGameEntityModel<TI, TC> : relationalEntity<TI, TC>
-        where TC : struct
-        where TI : struct, IEquatable<TI>
+using chessAPI.models.game;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
+public sealed class clsGameEntityModel
 {
-  public clsGameEntityModel()
-  {
-  }
-
-  public TI id { get; set; }
-  public DateTime started { get; set; }
-
-  public int whites { get; set; }
-  public int blacks { get; set; }
-
-  //white = true; black = false;
-
-  public bool turn { get; set; }
-
-  public int winner { get; set; }
-  public override TI key { get => id; set => id = value; }
-
-  public clsGame<TI> getClsGame() =>
-    new clsGame<TI>
+    public clsGameEntityModel()
     {
-      id = this.id,
-      started = this.started,
-      whites = this.whites,
-      blacks = this.blacks,
-      turn = this.turn,
-      winner = this.winner
-    };
+    }
 
+    public clsGameEntityModel(clsNewGame newGame, long id)
+    {
+        this.whites = newGame.whites;
+        this.blacks = newGame.blacks;
+        this.turn = newGame.turn;
+        this.id = id;
+        this.started = DateTimeOffset.Now;
+    }
 
+    public ObjectId Id { get; set; }
+
+    [BsonElement("id_game")]
+    public long id { get; set; }
+    public DateTimeOffset started { get; set; }
+    public int whites { get; set; }
+    public int blacks { get; set; }
+    public bool turn { get; set; }
+    public int winner { get; set; }
+
+    public static explicit operator clsGame(clsGameEntityModel x)
+    {
+        return new clsGame()
+        {
+            id = x.id,
+            started = x.started,
+            whites = x.whites,
+            blacks = x.blacks,
+            turn = x.turn,
+            winner = x.winner
+        };
+    }
 }

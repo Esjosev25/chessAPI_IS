@@ -1,66 +1,45 @@
-using chessAPI.dataAccess.common;
-using chessAPI.dataAccess.interfaces;
 using chessAPI.dataAccess.models;
 using chessAPI.models.game;
-using Dapper;
+using MongoDB.Bson;
+using MongoDB.Driver;
 
 namespace chessAPI.dataAccess.repositores;
 
-public sealed class clsGameRepository<TI, TC> : clsDataAccess<clsGameEntityModel<TI, TC>, TI, TC>, IGameRepository<TI, TC>
-        where TI : struct, IEquatable<TI>
-        where TC : struct
+public sealed class clsGameRepository : IGameRepository
 {
-  public clsGameRepository(IRelationalContext<TC> rkm,
-                             ISQLData queries,
-                             ILogger<clsGameRepository<TI, TC>> logger) : base(rkm, queries, logger)
-  {
-  }
+    private readonly IMongoCollection<clsGameEntityModel> gameCollection;
 
-  public async Task<TI> addGame(clsNewGame game)
-  {
-    var p = new DynamicParameters();
-    p.Add("WHITES", game.whites);
-    p.Add("STARTED", game.started);
-    p.Add("TURN", game.turn);
-    return await add<TI>(p).ConfigureAwait(false);
-  }
+    public clsGameRepository(IMongoCollection<clsGameEntityModel> gameCollection)
+    {
+        this.gameCollection = gameCollection;
+    }
 
-  public Task deleteGame(TI id)
-  {
-    throw new NotImplementedException();
-  }
+    private async Task<long> getLastGame()
+    {
+        //Empty document tells the driver to count all the documents in the collection
+        return await gameCollection.CountDocumentsAsync(new BsonDocument());
+    }
 
-  public async Task<clsGameEntityModel<TI, TC>> getGameById(TI id)
-  {
-    return await getEntity(id).ConfigureAwait(false);
-  }
+    public async Task addGame(clsNewGame newGame)
+    {
+        var newId = await getLastGame().ConfigureAwait(false) + 1;
+        await gameCollection.InsertOneAsync(new clsGameEntityModel(newGame, newId)).ConfigureAwait(false);
+    }
 
-  public async Task<clsGameEntityModel<TI,TC>> updateGame(clsPutGame<TI> updatedGame, bool turn)
-  {
-    var p = new DynamicParameters();
-    p.Add("BLACKS", updatedGame.blacks);
-    p.Add("WHITES", updatedGame.whites);
-    p.Add("ID", updatedGame.id);
-    p.Add("TURN", updatedGame.turn ?? turn);
-    p.Add("WINNER", updatedGame.winner);
-    return await set<clsGameEntityModel<TI, TC>>(p,
-               null, queries.UpdateWholeEntity, null).ConfigureAwait(false);
-    
-  }
-  protected override DynamicParameters fieldsAsParams(clsGameEntityModel<TI, TC> entity)
-  {
-    if (entity == null) throw new ArgumentNullException(nameof(entity));
-    var p = new DynamicParameters();
-    p.Add("ID", entity.id);
-    //p.Add("EMAIL", entity);
-    return p;
-  }
+    public async Task<clsGameEntityModel?> getGame(long id)
+    {
+        var filter = Builders<clsGameEntityModel>.Filter.Eq(r => r.id, id);
+        return await gameCollection.Find(filter).FirstOrDefaultAsync().ConfigureAwait(false);
+    }
 
-  protected override DynamicParameters keyAsParams(TI key)
-  {
-    var p = new DynamicParameters();
-    p.Add("ID", key);
-    return p;
-  }
-
+    public async Task swapTurn(long id)
+    {
+        var gameToSwap = await getGame(id).ConfigureAwait(false);
+        if (gameToSwap != null)
+        {
+            var update = Builders<clsGameEntityModel>.Update.Set(g => g.turn, !gameToSwap.turn);
+            var filter = Builders<clsGameEntityModel>.Filter.Eq(r => r.id, id);
+            await gameCollection.UpdateOneAsync(filter, update);
+        }
+    }
 }

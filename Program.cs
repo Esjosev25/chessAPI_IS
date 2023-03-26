@@ -17,129 +17,96 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-  Log.Information("chessAPI starting");
-  var builder = WebApplication.CreateBuilder(args);
+    Log.Information("chessAPI starting");
+    var builder = WebApplication.CreateBuilder(args);
 
-  var connectionStrings = new connectionStrings();
-  builder.Services.AddOptions();
-  builder.Services.Configure<connectionStrings>(builder.Configuration.GetSection("ConnectionStrings"));
-  builder.Configuration.GetSection("ConnectionStrings").Bind(connectionStrings);
+    var connectionStrings = new connectionStrings();
+    builder.Services.AddOptions();
+    builder.Services.Configure<connectionStrings>(builder.Configuration.GetSection("ConnectionStrings"));
+    builder.Configuration.GetSection("ConnectionStrings").Bind(connectionStrings);
 
-  // Two-stage initialization (https://github.com/serilog/serilog-aspnetcore)
-  builder.Host.UseSerilog((context, services, configuration) => configuration.ReadFrom
-           .Configuration(context.Configuration)
-           .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning).ReadFrom
-           .Services(services).Enrich
-           .FromLogContext().WriteTo
-           .Console());
+    // Two-stage initialization (https://github.com/serilog/serilog-aspnetcore)
+    builder.Host.UseSerilog((context, services, configuration) => configuration.ReadFrom
+             .Configuration(context.Configuration)
+             .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning).ReadFrom
+             .Services(services).Enrich
+             .FromLogContext().WriteTo
+             .Console());
 
-  // Autofac como inyección de dependencias
-  builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
-  builder.Host.ConfigureContainer<ContainerBuilder>(builder => builder.RegisterModule(new chessAPI.dependencyInjection<int, int>()));
-  var app = builder.Build();
-  app.UseSerilogRequestLogging();
-  app.UseMiddleware(typeof(chessAPI.customMiddleware<int>));
-  app.MapGet("/", () =>
-  {
-    return "hola mundo";
-  });
-  // * Player
-  app.MapPost("player",
-  [AllowAnonymous] async (IPlayerBusiness<int> bs, clsNewPlayer newPlayer) =>
-  {
-    var player = await bs.addPlayer(newPlayer);
-    if (player != null)
-      return Results.Ok(player);
-    return Results.BadRequest(new errorMessage($"Email {newPlayer.email} already exists "));
-  }
-    );
+    // Autofac como inyección de dependencias
+    builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+    builder.Host.ConfigureContainer<ContainerBuilder>(builder => builder.RegisterModule(new chessAPI.dependencyInjection<int, int>()));
+    var app = builder.Build();
+    app.UseSerilogRequestLogging();
+    app.UseMiddleware(typeof(chessAPI.customMiddleware<int>));
+    app.MapGet("/", () =>
+    {
+        return "hola mundo";
+    });
+    // * Player
+    app.MapPost("player",
+    [AllowAnonymous] async (IPlayerBusiness<int> bs, clsNewPlayer newPlayer) =>
+    {
+        var player = await bs.addPlayer(newPlayer);
+        if (player != null)
+            return Results.Ok(player);
+        return Results.BadRequest(new errorMessage($"Email {newPlayer.email} already exists "));
+    }
+      );
 
-  app.MapGet("player",
-  [AllowAnonymous] async (IPlayerBusiness<int> bs, int playerId) =>
-  {
-    Console.WriteLine(playerId);
-    var player = await bs.getPlayer(playerId);
-    if (player != null) return Results.Ok(player);
+    app.MapGet("player",
+    [AllowAnonymous] async (IPlayerBusiness<int> bs, int playerId) =>
+    {
+        Console.WriteLine(playerId);
+        var player = await bs.getPlayer(playerId);
+        if (player != null) return Results.Ok(player);
 
-    return Results.NotFound(new errorMessage($"Player with id {playerId} not found"));
-  });
+        return Results.NotFound(new errorMessage($"Player with id {playerId} not found"));
+    });
 
-  app.MapPut("player",
- [AllowAnonymous] async (IPlayerBusiness<int> bs, clsPlayer<int> updatePlayer) =>
- {
-   Console.WriteLine("lol");
-   var player = await bs.updatePlayer(updatePlayer);
-   if (player != null)
-     return Results.Ok(player);
-
-   return Results.NotFound(new errorMessage($"Player with id {updatePlayer.id} not found"));
- });
-  // * Team
-  app.MapPost("team",
-   [AllowAnonymous] async (IPlayerBusiness<int> bs, clsNewPlayer newPlayer) => Results.Ok(await bs.addPlayer(newPlayer)));
-
-  // * Game
-  app.MapPost("game",
-   [AllowAnonymous] async (IGameBusiness<int> bs, clsNewGame newGame) =>
+    app.MapPut("player",
+   [AllowAnonymous] async (IPlayerBusiness<int> bs, clsPlayer<int> updatePlayer) =>
    {
-     try
-     {
-       var game = await bs.addGame(newGame);
-       return Results.Ok(game);
-     }
-     catch (Exception ex)
-     {
-       var code = ex.Message.Split(":")[0];
-       if (code.Equals("23503"))
-         return Results.NotFound(new errorMessage($"Game with id {newGame.whites} doesn't exist"));
+       Console.WriteLine("lol");
+       var player = await bs.updatePlayer(updatePlayer);
+       if (player != null)
+           return Results.Ok(player);
 
-       throw ex;
-
-     }
-
-
+       return Results.NotFound(new errorMessage($"Player with id {updatePlayer.id} not found"));
    });
+    // * Team
+    app.MapPost("team",
+     [AllowAnonymous] async (IPlayerBusiness<int> bs, clsNewPlayer newPlayer) => Results.Ok(await bs.addPlayer(newPlayer)));
 
-  app.MapGet("game",
-  [AllowAnonymous] async (IGameBusiness<int> bs, int id) =>
-  {
-    Console.WriteLine(id);
-    var game = await bs.getGame(id);
-    if (game != null) return Results.Ok(game);
+    #region "Game REST Commands"
 
-    return Results.NotFound(new errorMessage($"Game with id {id} not found"));
-  });
-
-  app.MapPut("game",
- [AllowAnonymous] async (IGameBusiness<int> bs, clsPutGame<int> updateGame) =>
- {
-  try
-  {
-     Console.WriteLine("lol");
-     var player = await bs.updateGame(updateGame);
-     if (player != null)
-       return Results.Ok(player);
-     return Results.BadRequest(new errorMessage($"One or more players belongs to both teams"));
-  }
-  catch (Exception ex)
-  {
-     var code = ex.Message.Split(":")[0];
-     if (code.Equals("23503"))
-       return Results.NotFound(new errorMessage($"Team with id {updateGame.blacks} or {updateGame.whites} doesn't exist"));
-
-     throw ex;
-  }
-   
- });
+    app.MapGet("game/{id}", async (IGameBusiness bs, long id) =>
+    {
+        var x = await bs.getGame(id).ConfigureAwait(false);
+        return x != null ? Results.Ok(x) : Results.NotFound();
+    });
+    app.MapPost("game",
+    [AllowAnonymous] async (IGameBusiness bs, clsNewGame newGame) =>
+    {
+        await bs.startGame(newGame).ConfigureAwait(false);
+        return Results.Ok();
+    });
+    app.MapPut("/game/{id}/swapturn",
+    [AllowAnonymous] async (IGameBusiness bs, long id) =>
+    {
+        var didSwap = await bs.swapTurn(id).ConfigureAwait(false);
+        return didSwap ? Results.Ok() : Results.BadRequest();
+    });
+    #endregion
 
 
-  app.Run();
+    app.Run();
 }
 catch (Exception ex)
 {
-  Log.Fatal(ex, "chessAPI terminated unexpectedly");
+    Log.Fatal(ex, "chessAPI terminated unexpectedly");
 }
 finally
 {
-  Log.CloseAndFlush();
+    Log.CloseAndFlush();
 }

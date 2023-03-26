@@ -38,6 +38,16 @@ services:
       - pgdata
     networks:
       - backend
+  db:
+      image: mongo:5
+      container_name: mongo-chessDB
+      restart: always
+      ports:
+        - 27017:27017
+      environment:
+        MONGODB_DATABASE: chessDB
+      volumes:
+        - ./mongo:/data/db
 networks:
   backend:
     driver: bridge

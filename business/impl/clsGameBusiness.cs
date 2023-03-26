@@ -1,63 +1,31 @@
-using chessAPI.business.interfaces;
 using chessAPI.dataAccess.repositores;
 using chessAPI.models.game;
+using chessAPI.business.interfaces;
 
 namespace chessAPI.business.impl;
 
-public sealed class clsGameBusiness<TI, TC> : IGameBusiness<TI>
-    where TI : struct, IEquatable<TI>
-    where TC : struct
+public sealed class clsGameBusiness : IGameBusiness
 {
-  internal readonly IGameRepository<TI, TC> gameRepository;
+    internal readonly IGameRepository gameRepository;
 
-  public clsGameBusiness(IGameRepository<TI, TC> gameRepository)
-  {
-    this.gameRepository = gameRepository;
-  }
+    public clsGameBusiness(IGameRepository gameRepository) => this.gameRepository = gameRepository;
 
-  public async Task<clsGame<TI>> addGame(clsNewGame newGame)
-  {
-    // var player = await gameRepository.getPlayerByEmail(newGame);
-    // if (player != null)
+    public async Task startGame(clsNewGame newGame) => await gameRepository.addGame(newGame).ConfigureAwait(false);
 
-    //   return null;
-
-
-    var x = await gameRepository.addGame(newGame).ConfigureAwait(false);
-
-    return new clsGame<TI>(x, newGame);
-  }
-
-
-
-  public async Task<clsGame<TI>?> getGame(TI id)
-  {
-    var x = await gameRepository.getGameById(id).ConfigureAwait(false);
-    if (x == null) return null;
-    Console.WriteLine(x);
-
-    return new clsGame<TI>(id, x.whites, x.blacks, x.started, x.turn);
-  }
-
-
-  public async Task<clsGame<TI>?> updateGame(clsPutGame<TI> updateGame)
-  {
-    var game = await gameRepository.getGameById(updateGame.id).ConfigureAwait(false);
-
-    if (game != null)
+    public async Task<clsGame?> getGame(long id)
     {
-
-      var gameModel = await gameRepository.updateGame(updateGame, game.turn).ConfigureAwait(false);
-      if(gameModel != null)
-      return gameModel.getClsGame();
-
-      return null;
+        var x = await gameRepository.getGame(id).ConfigureAwait(false);
+        return x != null ? (clsGame)x : null;
     }
 
-    return null;
-
-
-  }
-
-
+    public async Task<bool> swapTurn(long id)
+    {
+        var x = await gameRepository.getGame(id).ConfigureAwait(false);
+        if (x != null)
+        {
+            await gameRepository.swapTurn(id).ConfigureAwait(false);
+            return true;
+        }
+        return false;
+    }
 }
